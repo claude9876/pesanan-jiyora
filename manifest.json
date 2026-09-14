@@ -1,21 +1,14 @@
 {
-  "name": "Dashboard Pesanan Konveksi",
-  "short_name": "KonveksiApp",
+  "name": "Jiyora — Pesanan Shopee",
+  "short_name": "Jiyora",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4f7f6",
-  "theme_color": "#2c3e50",
-  "description": "Aplikasi Web input dan output pesanan blouse dan kemeja",
+  "background_color": "#FBF3E8",
+  "theme_color": "#97315C",
+  "description": "Pencatatan dan rekap pesanan Shopee untuk Jiyora, tersinkron dengan Google Sheet.",
   "icons": [
-    {
-      "src": "icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
