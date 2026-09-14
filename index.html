@@ -7,6 +7,8 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ee4d2d">
     <style>
+        /* CSS tetap di sini agar tidak perlu membuat terlalu banyak file, 
+           tapi Anda juga bisa memisahkannya ke style.css jika mau */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
         .navbar { background-color: #ee4d2d; padding: 15px; text-align: center; color: white; display: flex; justify-content: space-around; }
         .navbar button { background: white; color: #ee4d2d; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
@@ -15,7 +17,6 @@
         .container { max-width: 900px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         h1, h2 { text-align: center; color: #333; }
         
-        /* Dashboard Styles */
         .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .card { background: #fdf2f0; padding: 15px; border-radius: 8px; border-left: 5px solid #ee4d2d; }
         .total-box { font-size: 1.5em; text-align: center; font-weight: bold; color: #ee4d2d; margin-top: 5px;}
@@ -24,16 +25,12 @@
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background-color: #ee4d2d; color: white; }
 
-        /* Form & Input Styles */
         label { font-weight: bold; display: block; margin-top: 10px; color: #555; }
         input, select, button.btn-submit { width: 100%; padding: 12px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
         button.btn-submit { background-color: #ee4d2d; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; }
         button.btn-submit:hover { background-color: #d73d22; }
         
-        /* Loading Text */
         #loadingText { text-align: center; color: #ee4d2d; font-weight: bold; margin-top: 10px; display: none; }
-
-        /* Section Visibility */
         #pin-section, #admin-section { display: none; }
         .pin-container { text-align: center; margin-top: 50px; }
         .pin-container input { width: 200px; text-align: center; font-size: 20px; letter-spacing: 5px; }
@@ -42,8 +39,8 @@
 <body>
 
 <div class="navbar">
-    <button onclick="showSection('public-section')">📊 Dashboard (Umum)</button>
-    <button onclick="showSection('pin-section')">📝 Input Admin</button>
+    <button id="btn-public">📊 Dashboard (Umum)</button>
+    <button id="btn-admin">📝 Input Admin</button>
 </div>
 
 <!-- 1. HALAMAN UMUM -->
@@ -64,7 +61,7 @@
         </div>
     </div>
 
-    <h3 style="margin-top: 30px;">Riwayat Pesanan Masuk <button onclick="loadData()" style="font-size: 12px; cursor: pointer; padding: 5px; float: right;">🔄 Refresh Data</button></h3>
+    <h3 style="margin-top: 30px;">Riwayat Pesanan Masuk <button id="btn-refresh" style="font-size: 12px; cursor: pointer; padding: 5px; float: right;">🔄 Refresh Data</button></h3>
     <p id="loadingText">⏳ Menyinkronkan data dari Google Sheet...</p>
     
     <div style="overflow-x:auto;">
@@ -92,7 +89,7 @@
     <h2>Akses Form Input</h2>
     <p>Masukkan PIN Admin untuk menambah pesanan baru.</p>
     <input type="password" id="pinInput" placeholder="****" maxlength="4">
-    <button class="btn-submit" onclick="verifyPin()" style="width: 200px;">Masuk</button>
+    <button class="btn-submit" id="btn-verify-pin" style="width: 200px;">Masuk</button>
 </div>
 
 <!-- 3. HALAMAN ADMIN (FORM INPUT PESANAN) -->
@@ -136,144 +133,7 @@
     <p id="notifInput" style="text-align:center; color:green; font-weight:bold; display:none; margin-top:15px;">Data berhasil ditambahkan ke Dashboard!</p>
 </div>
 
-<script>
-    // MASUKKAN URL GOOGLE APPS SCRIPT DI SINI
-    const scriptURL = '‎https://script.google.com/macros/s/AKfycbz7ky6NIAwk-WXLMWvt8awAfRawCOZL68-Hv0lcrCUvYLabuC4JE-LfG9qYXSgzE2foIA/exec'; 
-    const form = document.getElementById('orderForm');
-    
-    let totals = { "Blouse Polkadot Terbaru": 0, "Kemeja Polkadot": 0, "Semua": 0 };
-
-    // --- FITUR BARU: TARIK DATA DARI GOOGLE SHEET ---
-    function loadData() {
-        document.getElementById('loadingText').style.display = 'block';
-        
-        fetch(scriptURL)
-            .then(response => response.json())
-            .then(data => {
-                // Bersihkan tabel dan reset total sebelum diisi ulang
-                const tbody = document.querySelector('#tabelPesanan tbody');
-                tbody.innerHTML = ''; 
-                totals = { "Blouse Polkadot Terbaru": 0, "Kemeja Polkadot": 0, "Semua": 0 };
-
-                // Membaca baris dari Google Sheet (dari yang terbaru ke terlama)
-                data.forEach(row => {
-                    const waktu = row[0];
-                    const nama = row[1];
-                    const jenis = row[2];
-                    const warna = row[3];
-                    const ukuran = row[4];
-                    const jumlah = parseInt(row[5]);
-
-                    // Lewati baris kosong atau baris judul (jika bukan angka)
-                    if(!waktu || isNaN(jumlah)) return; 
-
-                    // Update perhitungan Dashboard
-                    if (totals[jenis] !== undefined) totals[jenis] += jumlah;
-                    totals["Semua"] += jumlah;
-
-                    // Masukkan ke dalam tabel HTML (di bagian atas)
-                    const tr = `<tr>
-                        <td>${waktu}</td>
-                        <td>${nama}</td>
-                        <td>${jenis}</td>
-                        <td>${warna}</td>
-                        <td>${ukuran}</td>
-                        <td>${jumlah}</td>
-                        <td style="color: green; font-size:12px;">✅ Sinkron</td>
-                    </tr>`;
-                    tbody.insertAdjacentHTML('afterbegin', tr);
-                });
-
-                // Update angka besar di layar
-                document.getElementById('totBlouseBaru').innerText = totals["Blouse Polkadot Terbaru"];
-                document.getElementById('totKemejaPolkadot').innerText = totals["Kemeja Polkadot"];
-                document.getElementById('totSemua').innerText = totals["Semua"];
-                
-                document.getElementById('loadingText').style.display = 'none';
-            })
-            .catch(error => {
-                console.error('Gagal mengambil data:', error);
-                document.getElementById('loadingText').innerText = '⚠️ Gagal mengambil data, Anda sedang offline.';
-            });
-    }
-
-    // --- NAVIGASI & VERIFIKASI PIN ---
-    function showSection(sectionId) {
-        document.getElementById('public-section').style.display = 'none';
-        document.getElementById('pin-section').style.display = 'none';
-        document.getElementById('admin-section').style.display = 'none';
-        
-        if(sectionId === 'pin-section') document.getElementById('pinInput').value = '';
-        document.getElementById(sectionId).style.display = 'block';
-    }
-
-    function verifyPin() {
-        const pin = document.getElementById('pinInput').value;
-        if(pin === '1998') {
-            document.getElementById('pin-section').style.display = 'none';
-            document.getElementById('admin-section').style.display = 'block';
-        } else {
-            alert('PIN Salah!');
-        }
-    }
-
-    // --- FORM SUBMIT (KIRIM DATA BARU) ---
-    form.addEventListener('submit', e => {
-        e.preventDefault();
-        
-        const nama = document.getElementById('namaPemesan').value;
-        const jenis = document.getElementById('jenisPakaian').value;
-        const warna = document.getElementById('warna').value;
-        const ukuran = document.getElementById('ukuran').value;
-        const jumlah = parseInt(document.getElementById('jumlah').value);
-        const waktu = new Date().toLocaleString();
-
-        // Tampilkan sementara di tabel agar tidak perlu tunggu loading lama
-        const tbody = document.querySelector('#tabelPesanan tbody');
-        const idUnik = waktu.replace(/\D/g,'');
-        const row = `<tr>
-            <td>${waktu}</td>
-            <td>${nama}</td>
-            <td>${jenis}</td>
-            <td>${warna}</td>
-            <td>${ukuran}</td>
-            <td>${jumlah}</td>
-            <td id="status-${idUnik}" style="color: #e67e22; font-size:12px;">Syncing..</td>
-        </tr>`;
-        tbody.insertAdjacentHTML('afterbegin', row);
-
-        const formData = new FormData();
-        formData.append('waktu', waktu);
-        formData.append('nama', nama);
-        formData.append('jenis', jenis);
-        formData.append('warna', warna);
-        formData.append('ukuran', ukuran);
-        formData.append('jumlah', jumlah);
-
-        fetch(scriptURL, { method: 'POST', body: formData })
-            .then(response => {
-                document.getElementById(`status-${idUnik}`).innerText = "✅ Sinkron";
-                document.getElementById(`status-${idUnik}`).style.color = "green";
-                // Jalankan loadData lagi agar total dashboard langsung berhitung ulang secara presisi dari database
-                loadData(); 
-            })
-            .catch(error => {
-                document.getElementById(`status-${idUnik}`).innerText = "⚠️ Offline";
-                document.getElementById(`status-${idUnik}`).style.color = "red";
-            });
-
-        document.getElementById('notifInput').style.display = 'block';
-        setTimeout(() => document.getElementById('notifInput').style.display = 'none', 3000);
-        form.reset();
-    });
-
-    // Panggil loadData() pertama kali saat web dibuka
-    window.addEventListener('load', () => {
-        loadData();
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    });
-</script>
+<!-- Menghubungkan ke file JavaScript eksternal -->
+<script src="app.js" defer></script>
 </body>
 </html>
