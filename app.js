@@ -1,5 +1,5 @@
 // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI BAWAH INI
-const scriptURL = 'https://script.google.com/macros/s/AKfycby8gXWk8WL5fXU5Z2HuXw_jLvkqgfGNK7kM3ytL_Ce-83_YaCiuXabWchzUgH4EZAkUVA/exec';
+const scriptURL = 'https://script.google.com/macros/s/AKfycbxDM_zBc9lj5xb9SOYopUUnciW5ljKdI5EIqzu6nZ2F9MPNEJEzS1fc1dUaOFC9Rh62iA/exec';
 
 let totals = { "Blouse Polkadot Terbaru": 0, "Kemeja Polkadot": 0, "Semua": 0 };
 
