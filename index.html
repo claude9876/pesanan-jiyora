@@ -209,8 +209,20 @@
     margin-top: 8px;
   }
 
+  .date-group {
+    padding: 16px 20px 9px;
+    font-size: 0.74em;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    background: var(--pending-bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .date-group:first-child { border-top: none; }
+
   .order-row {
-    padding: 14px 18px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--line);
   }
   .order-row:last-child { border-bottom: none; }
@@ -225,10 +237,10 @@
   }
   .order-qty { font-weight: 600; color: var(--berry); font-size: 0.92em; white-space: nowrap; flex-shrink: 0; }
 
-  .order-product { font-size: 0.86em; color: var(--ink); margin-top: 3px; }
-  .order-variant { font-size: 0.82em; color: var(--ink-soft); margin-top: 1px; }
+  .order-product { font-size: 0.86em; color: var(--ink); margin-top: 4px; }
+  .order-variant { font-size: 0.82em; color: var(--ink-soft); margin-top: 2px; }
 
-  .order-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .order-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
   .order-time { font-size: 0.76em; color: var(--ink-soft); }
 
   .status-tag {
