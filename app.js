@@ -19,6 +19,51 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
 }
 
+// --- BANTUAN PENGELOMPOKAN TANGGAL ---
+const BULAN_PENDEK = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des'];
+const BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const HARI_PANJANG = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+// Memecah "15 Sep 2026, 14.05" -> { tanggal: "15 Sep 2026", jam: "14.05" }
+function splitWaktu(waktu) {
+  const str = String(waktu);
+  const idx = str.indexOf(',');
+  if (idx === -1) return { tanggal: str.trim(), jam: '' };
+  return { tanggal: str.slice(0, idx).trim(), jam: str.slice(idx + 1).trim() };
+}
+
+// Mengubah "15 Sep 2026" -> objek Date (tengah malam, waktu lokal)
+function parseTanggalPendek(tanggalStr) {
+  const match = String(tanggalStr).trim().match(/^(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})$/);
+  if (!match) return null;
+  const bulanIdx = BULAN_PENDEK.indexOf(match[2].toLowerCase().slice(0, 3));
+  if (bulanIdx === -1) return null;
+  return new Date(parseInt(match[3]), bulanIdx, parseInt(match[1]));
+}
+
+function samaHari(a, b) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+// Label grup lengkap dengan hari, tanggal, tahun -> "Hari ini · Selasa, 15 September 2026"
+function formatLabelTanggal(tanggalStr) {
+  const d = parseTanggalPendek(tanggalStr);
+  if (!d) return tanggalStr;
+
+  const now = new Date();
+  const kemarin = new Date(now);
+  kemarin.setDate(kemarin.getDate() - 1);
+
+  const teks = `${HARI_PANJANG[d.getDay()]}, ${d.getDate()} ${BULAN_PANJANG[d.getMonth()]} ${d.getFullYear()}`;
+  if (samaHari(d, now)) return `Hari ini · ${teks}`;
+  if (samaHari(d, kemarin)) return `Kemarin · ${teks}`;
+  return teks;
+}
+
+function dateGroupHtml(tanggalStr) {
+  return `<div class="date-group" data-tanggal="${escapeHtml(tanggalStr)}">${escapeHtml(formatLabelTanggal(tanggalStr))}</div>`;
+}
+
 function orderRowHtml({ waktu, nama, jenis, warna, ukuran, jumlah, statusKind, statusLabel, statusId }) {
   return `<div class="order-row" ${statusId ? `id="${statusId}"` : ''}>
       <div class="order-main">
@@ -65,8 +110,7 @@ function loadData() {
       wrap.innerHTML = '';
       totals = { "Blouse Polkadot Terbaru": 0, "Kemeja Polkadot": 0, "Semua": 0 };
 
-      let rowsHtml = '';
-      let count = 0;
+      const pesanan = [];
 
       data.forEach((row, index) => {
         // Lewati baris header sheet
@@ -83,16 +127,28 @@ function loadData() {
 
         if (totals[jenis] !== undefined) totals[jenis] += jumlah;
         totals["Semua"] += jumlah;
-        count++;
 
+        pesanan.push({ waktu, nama, jenis, warna, ukuran, jumlah });
+      });
+
+      // Pesanan terbaru ditampilkan di atas, dikelompokkan per hari/tanggal/tahun
+      let rowsHtml = '';
+      let tanggalSebelumnya = null;
+
+      pesanan.slice().reverse().forEach(p => {
+        const { tanggal, jam } = splitWaktu(p.waktu);
+        if (tanggal !== tanggalSebelumnya) {
+          rowsHtml += dateGroupHtml(tanggal);
+          tanggalSebelumnya = tanggal;
+        }
         rowsHtml += orderRowHtml({
-          waktu, nama, jenis, warna, ukuran, jumlah,
+          waktu: jam || p.waktu, nama: p.nama, jenis: p.jenis, warna: p.warna, ukuran: p.ukuran, jumlah: p.jumlah,
           statusKind: 'ok', statusLabel: 'Tersimpan'
         });
       });
 
       wrap.innerHTML = rowsHtml;
-      setEmptyState(count === 0);
+      setEmptyState(pesanan.length === 0);
 
       document.getElementById('totBlouseBaru').innerText = totals["Blouse Polkadot Terbaru"];
       document.getElementById('totKemejaPolkadot').innerText = totals["Kemeja Polkadot"];
@@ -175,14 +231,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const jumlah = parseInt(document.getElementById('jumlah').value);
     const waktu = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
+    const { tanggal: tanggalIni, jam: jamIni } = splitWaktu(waktu);
     const idUnik = 'row-' + Date.now() + Math.floor(Math.random() * 1000);
     const rowHtml = orderRowHtml({
-      waktu, nama, jenis, warna, ukuran, jumlah,
+      waktu: jamIni, nama, jenis, warna, ukuran, jumlah,
       statusKind: 'pending', statusLabel: 'Menyimpan…', statusId: idUnik
     });
 
     const wrap = document.getElementById('tabelPesanan');
-    wrap.insertAdjacentHTML('afterbegin', rowHtml);
+    const grupPertama = wrap.querySelector('.date-group');
+    if (grupPertama && grupPertama.dataset.tanggal === tanggalIni) {
+      grupPertama.insertAdjacentHTML('afterend', rowHtml);
+    } else {
+      wrap.insertAdjacentHTML('afterbegin', dateGroupHtml(tanggalIni) + rowHtml);
+    }
     document.getElementById(idUnik).classList.add('entering');
     setEmptyState(false);
 
