@@ -16,10 +16,11 @@
     --paper: #FBF3E8;
     --paper-raised: #FFFFFF;
     --ink: #3A2036;
-    --ink-soft: #8A7488;
+    --ink-soft: #7A6478;
     --berry: #97315C;
     --berry-deep: #501836;
     --gold: #C8923A;
+    --gold-ink: #8A5A1F;
     --line: #E9DDCE;
     --success: #4B7A5A;
     --success-bg: #E9F0E7;
@@ -41,7 +42,7 @@
     background: var(--paper);
     color: var(--ink);
     margin: 0;
-    padding: 0 0 48px;
+    padding: 0 0 calc(48px + env(safe-area-inset-bottom, 0px));
     -webkit-font-smoothing: antialiased;
   }
 
@@ -58,7 +59,7 @@
   /* ---------- HEADER ---------- */
   .site-header {
     background: linear-gradient(160deg, var(--berry) 0%, var(--berry-deep) 100%);
-    padding: 22px 20px 20px;
+    padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 20px;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -175,8 +176,8 @@
     background: var(--paper-raised);
     border: 1px solid var(--line);
     color: var(--berry);
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 999px;
     display: flex;
     align-items: center;
@@ -184,9 +185,9 @@
     cursor: pointer;
     transition: transform 0.15s ease, background 0.15s ease;
   }
-  .icon-btn:hover { background: var(--pending-bg); }
+  .icon-btn:hover, .icon-btn:active { background: var(--pending-bg); }
   .icon-btn.spinning svg { animation: spin 0.9s linear infinite; }
-  .icon-btn svg { width: 17px; height: 17px; }
+  .icon-btn svg { width: 18px; height: 18px; }
 
   .sync-pill {
     display: inline-flex;
@@ -217,8 +218,12 @@
   .order-row.entering { animation: rowIn 0.35s ease; }
 
   .order-main { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  .order-buyer { font-weight: 600; font-size: 0.98em; }
-  .order-qty { font-weight: 600; color: var(--berry); font-size: 0.92em; white-space: nowrap; }
+  .order-buyer {
+    font-weight: 600; font-size: 0.98em;
+    min-width: 0; flex: 1 1 auto;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .order-qty { font-weight: 600; color: var(--berry); font-size: 0.92em; white-space: nowrap; flex-shrink: 0; }
 
   .order-product { font-size: 0.86em; color: var(--ink); margin-top: 3px; }
   .order-variant { font-size: 0.82em; color: var(--ink-soft); margin-top: 1px; }
@@ -237,7 +242,7 @@
   }
   .status-tag svg { width: 11px; height: 11px; }
   .status-ok { background: var(--success-bg); color: var(--success); }
-  .status-pending { background: var(--pending-bg); color: var(--gold); }
+  .status-pending { background: var(--pending-bg); color: var(--gold-ink); }
   .status-fail { background: var(--danger-bg); color: var(--danger); }
 
   .empty-state {
@@ -248,7 +253,7 @@
   .empty-state .dots { margin-bottom: 10px; }
   .empty-state .dots span {
     display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--line); margin: 0 3px;
+    background: #D9C7B5; margin: 0 3px;
   }
   .empty-state .dots span:nth-child(2) { background: var(--gold); }
   .empty-state p { margin: 2px 0; font-size: 0.9em; }
@@ -267,7 +272,7 @@
   }
   .pin-card .lock-icon {
     width: 46px; height: 46px; border-radius: 50%;
-    background: var(--pending-bg); color: var(--gold);
+    background: var(--pending-bg); color: var(--gold-ink);
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 14px;
   }
@@ -364,7 +369,7 @@
   .toast {
     position: fixed;
     left: 50%;
-    bottom: 22px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
     transform: translateX(-50%) translateY(20px);
     background: var(--ink);
     color: var(--paper);
